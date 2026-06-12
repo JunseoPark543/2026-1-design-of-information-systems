@@ -142,7 +142,8 @@ supabase db seed
 - 관리자 대시보드 `/admin`은 발표용 데모 접근을 허용했습니다. 실제 운영에서는 `profiles.role` 또는 별도 `admins` 테이블을 추가해 RLS와 화면 접근을 제한하면 됩니다.
 - 관리자 메뉴 CRUD는 MVP 편의상 로그인한 사용자가 조작할 수 있게 RLS를 열어두었습니다. 운영 버전에서는 admin role 정책으로 좁혀야 합니다.
 - 장바구니는 빠른 시연을 위해 `localStorage`에 저장했습니다. 주문 시 Supabase의 `orders`, `order_items`에 영구 저장됩니다.
-- 회원가입 시 프로필은 Auth metadata와 DB trigger를 함께 사용해 이메일 인증 설정 여부에 대응했습니다.
+- 회원가입 화면에서는 이메일을 받지 않고, 입력한 아이디를 내부용 가상 이메일 아이디@tasteops.local로 변환해 Supabase Auth에 저장합니다.
+- 이 방식은 실제 이메일 수신이 불가능하므로 Supabase Auth의 Email confirmation을 꺼두는 것을 권장합니다.
 - 추천은 SQL 함수가 아니라 TypeScript 도메인 로직으로 구현했습니다. 발표 시 규칙 설명과 코드 확인이 쉽고, 나중에 ML 모델로 교체하기 편합니다.
 
 ## 시연 시나리오
