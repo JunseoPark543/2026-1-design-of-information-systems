@@ -8,20 +8,26 @@ import { createClient } from "@/lib/supabase/client";
 
 export function Navbar() {
   const router = useRouter();
-  const [email, setEmail] = useState<string | null>(null);
+  const [userLabel, setUserLabel] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? null));
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => setEmail(session?.user.email ?? null));
+    supabase.auth.getUser().then(({ data }) => {
+      const name = data.user?.user_metadata?.name as string | undefined;
+      setUserLabel(data.user ? name || "소비자" : null);
+    });
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      const name = session?.user.user_metadata?.name as string | undefined;
+      setUserLabel(session?.user ? name || "소비자" : null);
+    });
     return () => listener.subscription.unsubscribe();
   }, []);
 
   async function handleLogout() {
     const supabase = createClient();
     await supabase.auth.signOut();
-    setEmail(null);
+    setUserLabel(null);
     router.push("/");
     router.refresh();
   }
@@ -48,17 +54,17 @@ export function Navbar() {
           ))}
         </nav>
         <div className="hidden items-center gap-2 md:flex">
-          {email ? (
+          {userLabel ? (
             <>
-              <span className="max-w-40 truncate text-sm text-slate-500">{email}</span>
+              <span className="max-w-40 truncate text-sm text-slate-500">{userLabel}</span>
               <button onClick={handleLogout} className="flex h-10 w-10 items-center justify-center rounded-md text-slate-600 hover:bg-slate-100" aria-label="로그아웃">
                 <LogOut className="h-4 w-4" />
               </button>
             </>
           ) : (
             <>
-              <Link href="/login" className="rounded-md px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100">로그인</Link>
-              <Link href="/signup" className="rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700">회원가입</Link>
+              <Link href="/login" className="rounded-md px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100">데모 시작</Link>
+              <Link href="/signup" className="rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700">소비자 시작</Link>
             </>
           )}
         </div>
@@ -72,7 +78,11 @@ export function Navbar() {
             {links.map(({ href, label }) => (
               <Link key={href} href={href} onClick={() => setOpen(false)} className="rounded-md px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100">{label}</Link>
             ))}
-            {email ? <button onClick={handleLogout} className="rounded-md px-3 py-2 text-left text-sm font-semibold text-slate-700 hover:bg-slate-100">로그아웃</button> : <Link href="/login" onClick={() => setOpen(false)} className="rounded-md px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100">로그인</Link>}
+            {userLabel ? (
+              <button onClick={handleLogout} className="rounded-md px-3 py-2 text-left text-sm font-semibold text-slate-700 hover:bg-slate-100">로그아웃</button>
+            ) : (
+              <Link href="/login" onClick={() => setOpen(false)} className="rounded-md px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100">데모 시작</Link>
+            )}
           </div>
         </div>
       ) : null}
