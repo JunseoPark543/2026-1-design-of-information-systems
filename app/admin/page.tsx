@@ -11,20 +11,22 @@ import { PageHeader, PageShell } from "@/components/PageShell";
 import { StatCard } from "@/components/StatCard";
 import { buildAdminInsights } from "@/lib/admin-insights";
 import { compactNumber, formatCurrency } from "@/lib/format";
-import { fetchAdminMenuMetrics, fetchAllMenuRequests } from "@/lib/supabase-queries";
-import type { AdminInsight, AdminMenuMetric, MenuRequest } from "@/lib/types";
+import { fetchAdminMenuMetrics, fetchAdminProfiles, fetchAllMenuRequests } from "@/lib/supabase-queries";
+import type { AdminInsight, AdminMenuMetric, AdminProfileSummary, MenuRequest } from "@/lib/types";
 
 function AdminDashboard() {
   const [metrics, setMetrics] = useState<AdminMenuMetric[]>([]);
   const [requests, setRequests] = useState<MenuRequest[]>([]);
+  const [profiles, setProfiles] = useState<AdminProfileSummary[]>([]);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([fetchAdminMenuMetrics(), fetchAllMenuRequests()])
-      .then(([metricRows, requestRows]) => {
+    Promise.all([fetchAdminMenuMetrics(), fetchAllMenuRequests(), fetchAdminProfiles()])
+      .then(([metricRows, requestRows, profileRows]) => {
         setMetrics(metricRows);
         setRequests(requestRows);
+        setProfiles(profileRows);
       })
       .catch((error) => setMessage(error.message))
       .finally(() => setLoading(false));
@@ -45,9 +47,9 @@ function AdminDashboard() {
 
   return (
     <>
-      <PageHeader title="관리자 대시보드" description="매출, 인기 메뉴, 요청 메뉴, 개선 인사이트를 확인합니다." action={<LinkButton href="/admin/menus" variant="secondary">메뉴 관리</LinkButton>} />
+      <PageHeader title="관리자 대시보드" description="매출, 인기 메뉴, 요청 메뉴, 회원 정보, 개선 인사이트를 확인합니다." action={<LinkButton href="/admin/menus" variant="secondary">메뉴 관리</LinkButton>} />
       {message ? <p className="mb-5 rounded-md bg-rose-50 p-3 text-sm font-semibold text-rose-700">{message}</p> : null}
-      {loading ? <EmptyState title="대시보드를 불러오는 중" description="매출, 리뷰, 요청 메뉴 데이터를 집계하고 있습니다." /> : null}
+      {loading ? <EmptyState title="대시보드를 불러오는 중" description="매출, 리뷰, 요청 메뉴, 회원 정보를 집계하고 있습니다." /> : null}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard title="총 판매 수량" value={`${compactNumber(totals.soldCount)}개`} icon={<ShoppingBag className="h-5 w-5" />} />
         <StatCard title="총 매출" value={formatCurrency(totals.revenue)} icon={<ReceiptText className="h-5 w-5" />} />
@@ -78,6 +80,51 @@ function AdminDashboard() {
           </div>
         </section>
       </div>
+
+      <section className="mt-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h2 className="text-lg font-bold text-slate-950">회원 정보</h2>
+            <p className="mt-1 text-sm text-slate-500">소비자가 등록한 프로필과 활동 요약입니다.</p>
+          </div>
+          <span className="text-sm font-semibold text-blue-700">총 {profiles.length}명</span>
+        </div>
+        <div className="mt-4 overflow-x-auto">
+          <table className="w-full min-w-[760px] text-left text-sm">
+            <thead className="border-b border-slate-200 bg-slate-50 text-slate-600">
+              <tr>
+                <th className="px-3 py-3 font-bold">이름</th>
+                <th className="px-3 py-3 font-bold">전화번호</th>
+                <th className="px-3 py-3 font-bold">성별</th>
+                <th className="px-3 py-3 font-bold">나이</th>
+                <th className="px-3 py-3 font-bold">주문</th>
+                <th className="px-3 py-3 font-bold">총 구매</th>
+                <th className="px-3 py-3 font-bold">별점</th>
+                <th className="px-3 py-3 font-bold">요청</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {profiles.map((profile) => (
+                <tr key={profile.id}>
+                  <td className="px-3 py-3 font-semibold text-slate-950">{profile.name || "이름 없음"}</td>
+                  <td className="px-3 py-3 text-slate-600">{profile.phone || "-"}</td>
+                  <td className="px-3 py-3 text-slate-600">{profile.gender || "-"}</td>
+                  <td className="px-3 py-3 text-slate-600">{profile.age ?? "-"}</td>
+                  <td className="px-3 py-3 text-slate-600">{profile.order_count}건</td>
+                  <td className="px-3 py-3 text-slate-600">{formatCurrency(profile.total_spent)}</td>
+                  <td className="px-3 py-3 text-slate-600">{profile.review_count}개</td>
+                  <td className="px-3 py-3 text-slate-600">{profile.request_count}회</td>
+                </tr>
+              ))}
+              {profiles.length === 0 ? (
+                <tr>
+                  <td className="px-3 py-6 text-center text-slate-500" colSpan={8}>등록된 회원 정보가 없습니다.</td>
+                </tr>
+              ) : null}
+            </tbody>
+          </table>
+        </div>
+      </section>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-3">
         <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm lg:col-span-2">

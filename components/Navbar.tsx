@@ -1,25 +1,42 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { BarChart3, Coffee, LogOut, Menu as MenuIcon, ShoppingCart, Sparkles } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { BarChart3, Coffee, LogOut, Menu as MenuIcon, Settings, ShoppingCart, Sparkles, UserRound } from "lucide-react";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 export function Navbar() {
+  const pathname = usePathname();
   const router = useRouter();
+  const isAdminArea = pathname.startsWith("/admin");
   const [userLabel, setUserLabel] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
 
-  useEffect(() => {
+  async function loadUserLabel() {
     const supabase = createClient();
-    supabase.auth.getUser().then(({ data }) => {
-      const name = data.user?.user_metadata?.name as string | undefined;
-      setUserLabel(data.user ? name || "소비자" : null);
-    });
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      const name = session?.user.user_metadata?.name as string | undefined;
-      setUserLabel(session?.user ? name || "소비자" : null);
+    const { data } = await supabase.auth.getUser();
+
+    if (!data.user) {
+      setUserLabel(null);
+      return;
+    }
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("name")
+      .eq("id", data.user.id)
+      .maybeSingle();
+
+    const metadataName = data.user.user_metadata?.name as string | undefined;
+    setUserLabel(profile?.name || metadataName || "소비자");
+  }
+
+  useEffect(() => {
+    loadUserLabel();
+    const supabase = createClient();
+    const { data: listener } = supabase.auth.onAuthStateChange(() => {
+      loadUserLabel();
     });
     return () => listener.subscription.unsubscribe();
   }, []);
@@ -32,12 +49,18 @@ export function Navbar() {
     router.refresh();
   }
 
-  const links = [
+  const consumerLinks = [
     { href: "/menus", label: "메뉴", icon: Coffee },
     { href: "/cart", label: "장바구니", icon: ShoppingCart },
     { href: "/recommendations", label: "추천", icon: Sparkles },
-    { href: "/admin", label: "관리자", icon: BarChart3 },
   ];
+
+  const adminLinks = [
+    { href: "/admin", label: "대시보드", icon: BarChart3 },
+    { href: "/admin/menus", label: "메뉴 관리", icon: Settings },
+  ];
+
+  const links = isAdminArea ? adminLinks : consumerLinks;
 
   return (
     <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
@@ -56,6 +79,11 @@ export function Navbar() {
         <div className="hidden items-center gap-2 md:flex">
           {userLabel ? (
             <>
+              {!isAdminArea ? (
+                <Link href="/signup" className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100">
+                  <UserRound className="h-4 w-4" />내 정보
+                </Link>
+              ) : null}
               <span className="max-w-40 truncate text-sm text-slate-500">{userLabel}</span>
               <button onClick={handleLogout} className="flex h-10 w-10 items-center justify-center rounded-md text-slate-600 hover:bg-slate-100" aria-label="로그아웃">
                 <LogOut className="h-4 w-4" />
@@ -76,7 +104,10 @@ export function Navbar() {
               <Link key={href} href={href} onClick={() => setOpen(false)} className="rounded-md px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100">{label}</Link>
             ))}
             {userLabel ? (
-              <button onClick={handleLogout} className="rounded-md px-3 py-2 text-left text-sm font-semibold text-slate-700 hover:bg-slate-100">로그아웃</button>
+              <>
+                {!isAdminArea ? <Link href="/signup" onClick={() => setOpen(false)} className="rounded-md px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100">내 정보</Link> : null}
+                <button onClick={handleLogout} className="rounded-md px-3 py-2 text-left text-sm font-semibold text-slate-700 hover:bg-slate-100">로그아웃</button>
+              </>
             ) : (
               <Link href="/signup" onClick={() => setOpen(false)} className="rounded-md px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100">소비자 시작</Link>
             )}

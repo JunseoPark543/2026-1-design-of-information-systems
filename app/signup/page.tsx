@@ -13,23 +13,32 @@ export default function SignupPage() {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [profileLoaded, setProfileLoaded] = useState(false);
+  const [hasExistingProfile, setHasExistingProfile] = useState(false);
 
   useEffect(() => {
     async function loadExistingProfile() {
       const supabase = createClient();
       const { data: auth } = await supabase.auth.getUser();
+
       if (!auth.user) {
         setProfileLoaded(true);
         return;
       }
 
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("profiles")
         .select("name, phone, gender, age")
         .eq("id", auth.user.id)
         .maybeSingle();
 
+      if (error) {
+        setMessage(error.message);
+        setProfileLoaded(true);
+        return;
+      }
+
       if (data) {
+        setHasExistingProfile(true);
         setForm({
           name: data.name ?? "",
           phone: data.phone ?? "",
@@ -47,7 +56,10 @@ export default function SignupPage() {
       setProfileLoaded(true);
     }
 
-    loadExistingProfile().catch(() => setProfileLoaded(true));
+    loadExistingProfile().catch((error) => {
+      setMessage(error.message);
+      setProfileLoaded(true);
+    });
   }, []);
 
   function updateField(name: string, value: string) {
@@ -67,37 +79,39 @@ export default function SignupPage() {
       age: form.age ? Number(form.age) : null,
     };
 
+    if (!profile.name) {
+      setLoading(false);
+      setMessage("이름을 입력해주세요.");
+      return;
+    }
+
     const { data: currentAuth } = await supabase.auth.getUser();
     let userId = currentAuth.user?.id;
 
     if (!userId) {
-      const { data, error } = await supabase.auth.signInAnonymously({
-        options: { data: profile },
-      });
+      const { data, error } = await supabase.auth.signInAnonymously({ options: { data: profile } });
 
       if (error || !data.user) {
         setLoading(false);
-        setMessage("소비자 정보를 저장할 수 없습니다. Supabase Auth에서 Anonymous sign-ins 설정을 켰는지 확인해주세요.");
+        setMessage("소비자 정보를 저장할 수 없습니다. Supabase Auth에서 Anonymous sign-ins 설정을 확인해주세요.");
         return;
       }
 
       userId = data.user.id;
-    } else {
-      await supabase.auth.updateUser({ data: profile });
     }
 
-    const { error: profileError } = await supabase.from("profiles").upsert({
-      id: userId,
-      ...profile,
-    });
-
-    setLoading(false);
+    const { error: profileError } = await supabase.from("profiles").upsert({ id: userId, ...profile }, { onConflict: "id" });
 
     if (profileError) {
+      setLoading(false);
       setMessage(profileError.message);
       return;
     }
 
+    await supabase.auth.updateUser({ data: profile });
+
+    setHasExistingProfile(true);
+    setLoading(false);
     setMessage("소비자 정보가 저장되었습니다.");
     router.push("/menus");
     router.refresh();
@@ -106,8 +120,8 @@ export default function SignupPage() {
   return (
     <PageShell className="flex min-h-[calc(100vh-72px)] items-center justify-center">
       <Card className="w-full max-w-2xl p-6">
-        <h1 className="text-2xl font-bold text-slate-950">소비자 정보 등록</h1>
-        <p className="mt-2 text-sm text-slate-600">한 번 등록한 정보는 현재 브라우저 세션에 유지되며, 다시 방문하면 같은 프로필을 수정할 수 있습니다.</p>
+        <h1 className="text-2xl font-bold text-slate-950">{hasExistingProfile ? "내 정보 수정" : "소비자 정보 등록"}</h1>
+        <p className="mt-2 text-sm text-slate-600">저장된 소비자 정보는 주문, 별점, 요청 메뉴, 추천 기능에 연결됩니다.</p>
         <form onSubmit={handleSubmit} className="mt-6 grid gap-4 sm:grid-cols-2">
           <label className="grid gap-2 text-sm font-semibold text-slate-700">
             이름
@@ -132,7 +146,7 @@ export default function SignupPage() {
           </label>
           {message ? <p className="rounded-md bg-blue-50 p-3 text-sm font-medium text-blue-700 sm:col-span-2">{message}</p> : null}
           <div className="sm:col-span-2">
-            <Button type="submit" disabled={loading || !profileLoaded} className="w-full">{loading ? "저장 중" : "정보 저장하고 시작"}</Button>
+            <Button type="submit" disabled={loading || !profileLoaded} className="w-full">{loading ? "저장 중" : "정보 저장"}</Button>
           </div>
         </form>
       </Card>

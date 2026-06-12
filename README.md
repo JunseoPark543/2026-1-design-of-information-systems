@@ -5,13 +5,13 @@
 ## 주요 기능
 
 - Supabase Auth 익명 세션 기반 소비자 정보 등록
-- 프로필 저장: 이름, 전화번호, 성별, 나이
+- 소비자 프로필 저장/수정: 이름, 전화번호, 성별, 나이
 - 메뉴 조회, 카테고리 필터, 평균 별점 표시
 - 장바구니 주문 및 주문 상세 저장
 - 주문 메뉴 별점 작성 및 평균 평점 반영
 - 원하는 메뉴 요청 등록, 기존 요청은 요청 횟수 증가
 - rule-based 맞춤형 메뉴 추천과 추천 이유 표시
-- 관리자 대시보드: 판매량, 매출, 인기 메뉴 TOP 5, 요청 메뉴, 개선/홍보 인사이트
+- 관리자 대시보드: 판매량, 매출, 인기 메뉴 TOP 5, 요청 메뉴, 회원 정보, 개선/홍보 인사이트
 - 관리자 메뉴 CRUD 및 활성/비활성 관리
 
 ## 기술 스택
@@ -100,7 +100,8 @@ Supabase 프로젝트의 Project Settings > API에서 URL과 anon key를 확인�
 Supabase SQL Editor에서 아래 순서로 실행합니다.
 
 1. `supabase/migrations/001_initial_schema.sql`
-2. `supabase/seed.sql`
+2. `supabase/migrations/002_admin_profile_summary.sql`
+3. `supabase/seed.sql`
 
 Supabase CLI를 사용하는 경우:
 
@@ -109,7 +110,9 @@ supabase db push
 supabase db seed
 ```
 
-`seed.sql`에는 메뉴, 주문, 리뷰, 요청 메뉴, 인사이트 샘플 데이터가 포함되어 있어 관리자 대시보드를 바로 시연할 수 있습니다. 소비자 개인 주문/리뷰 추천 흐름은 앱에서 회원가입 후 직접 주문과 리뷰를 생성해 확인합니다.
+`seed.sql`에는 메뉴, 주문, 리뷰, 요청 메뉴, 인사이트 샘플 데이터가 포함되어 있어 관리자 대시보드를 바로 시연할 수 있습니다. 소비자 개인 주문/추천 흐름은 앱에서 소비자 정보 등록 후 직접 주문과 별점을 생성해 확인합니다.
+
+이미 `001_initial_schema.sql`과 `seed.sql`을 실행했다면, 회원 정보 조회 기능을 위해 `002_admin_profile_summary.sql`만 추가로 실행하면 됩니다.
 
 ## Vercel 배포 방법
 
@@ -157,5 +160,5 @@ supabase db seed
 4. `/orders`에서 주문 내역 확인 후 별점 작성
 5. `/requests`에서 원하는 메뉴 요청
 6. `/recommendations`에서 추천 메뉴와 추천 이유 확인
-7. `/admin`에서 매출, 인기 메뉴, 요청 메뉴, 개선 인사이트 확인
+7. `/admin`에서 매출, 인기 메뉴, 회원 정보, 요청 메뉴, 개선 인사이트 확인
 8. `/admin/menus`에서 메뉴 추가/수정/비활성 처리 시연

@@ -85,3 +85,16 @@ export type AdminInsight = {
   type: "improve" | "promote" | "maintain" | "new-menu" | "replace";
   menuName?: string;
 };
+
+export type AdminProfileSummary = {
+  id: string;
+  name: string | null;
+  phone: string | null;
+  gender: string | null;
+  age: number | null;
+  created_at: string;
+  order_count: number;
+  total_spent: number;
+  review_count: number;
+  request_count: number;
+};
