@@ -20,33 +20,81 @@ export default function RequestsPage() {
     setRequests(await fetchMyRequests(userId));
   }
 
-  useEffect(() => { loadRequests().catch((error) => setMessage(error.message)); }, []);
+  useEffect(() => {
+    loadRequests().catch((error) => setMessage(error.message));
+  }, []);
+
+  async function getOrCreateConsumerId() {
+    const supabase = createClient();
+    const { data: auth } = await supabase.auth.getUser();
+
+    if (auth.user) return { supabase, userId: auth.user.id, ok: true as const };
+
+    const { data, error } = await supabase.auth.signInAnonymously({
+      options: { data: { name: "데모 사용자", gender: "선택 안 함" } },
+    });
+
+    if (error || !data.user) {
+      return {
+        supabase,
+        userId: null,
+        ok: false as const,
+        message: "메뉴 요청을 위해 Supabase Auth의 Anonymous sign-ins 설정을 켜주세요.",
+      };
+    }
+
+    const { error: profileError } = await supabase.from("profiles").upsert({
+      id: data.user.id,
+      name: "데모 사용자",
+      gender: "선택 안 함",
+    });
+
+    if (profileError) {
+      return { supabase, userId: null, ok: false as const, message: profileError.message };
+    }
+
+    return { supabase, userId: data.user.id, ok: true as const };
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setLoading(true);
     setMessage("");
-    const supabase = createClient();
-    const { data: auth } = await supabase.auth.getUser();
-    if (!auth.user) {
+
+    const normalizedName = requestedName.trim();
+    const client = await getOrCreateConsumerId();
+
+    if (!client.ok || !client.userId) {
       setLoading(false);
-      setMessage("로그인 후 원하는 메뉴를 요청할 수 있습니다.");
+      setMessage(client.message ?? "메뉴 요청을 저장할 수 없습니다.");
       return;
     }
-    const normalizedName = requestedName.trim();
-    const { data: existing, error: findError } = await supabase.from("menu_requests").select("id, request_count").eq("user_id", auth.user.id).ilike("requested_name", normalizedName).maybeSingle();
+
+    const { data: existing, error: findError } = await client.supabase
+      .from("menu_requests")
+      .select("id, request_count")
+      .eq("user_id", client.userId)
+      .ilike("requested_name", normalizedName)
+      .maybeSingle();
+
     if (findError) {
       setLoading(false);
       setMessage(findError.message);
       return;
     }
-    const mutation = existing ? supabase.from("menu_requests").update({ request_count: existing.request_count + 1 }).eq("id", existing.id) : supabase.from("menu_requests").insert({ user_id: auth.user.id, requested_name: normalizedName, request_count: 1 });
+
+    const mutation = existing
+      ? client.supabase.from("menu_requests").update({ request_count: existing.request_count + 1 }).eq("id", existing.id)
+      : client.supabase.from("menu_requests").insert({ user_id: client.userId, requested_name: normalizedName, request_count: 1 });
+
     const { error } = await mutation;
     setLoading(false);
+
     if (error) {
       setMessage(error.message);
       return;
     }
+
     setRequestedName("");
     setMessage("요청 메뉴가 저장되었습니다.");
     await loadRequests();
@@ -62,7 +110,12 @@ export default function RequestsPage() {
       {message ? <p className="mb-5 rounded-md bg-blue-50 p-3 text-sm font-semibold text-blue-700">{message}</p> : null}
       {requests.length === 0 ? <EmptyState title="아직 요청한 메뉴가 없습니다" description="먹고 싶은 메뉴를 입력해보세요." /> : null}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {requests.map((request) => <article key={request.id} className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm"><h2 className="text-lg font-bold text-slate-950">{request.requested_name}</h2><p className="mt-2 text-sm text-slate-500">요청 횟수 {request.request_count}회</p></article>)}
+        {requests.map((request) => (
+          <article key={request.id} className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+            <h2 className="text-lg font-bold text-slate-950">{request.requested_name}</h2>
+            <p className="mt-2 text-sm text-slate-500">요청 횟수 {request.request_count}회</p>
+          </article>
+        ))}
       </div>
     </PageShell>
   );

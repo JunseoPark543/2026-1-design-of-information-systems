@@ -140,9 +140,11 @@ supabase db seed
 ## MVP 기준 결정 사항
 
 - 관리자 대시보드 `/admin`은 발표용 데모 접근을 허용했습니다. 실제 운영에서는 `profiles.role` 또는 별도 `admins` 테이블을 추가해 RLS와 화면 접근을 제한하면 됩니다.
-- 관리자 메뉴 CRUD는 MVP 편의상 로그인한 사용자가 조작할 수 있게 RLS를 열어두었습니다. 운영 버전에서는 admin role 정책으로 좁혀야 합니다.
+- 관리자 메뉴 CRUD는 MVP 편의상 데모 관리자 익명 세션을 자동 생성해 조작할 수 있게 했습니다. 운영 버전에서는 admin role 정책으로 좁혀야 합니다.
 - 장바구니는 빠른 시연을 위해 `localStorage`에 저장했습니다. 주문 시 Supabase의 `orders`, `order_items`에 영구 저장됩니다.
 - 소비자 시작 화면은 계정 식별 정보를 받지 않고 Supabase Auth 익명 세션을 생성한 뒤 프로필만 저장합니다.
+- 리뷰 작성은 주문 내역 페이지에서 주문한 메뉴별로 가능하고, 별점은 메뉴 평균 평점에 반영됩니다.
+- 메뉴 요청은 소비자 세션이 있는 상태에서 가능하며, 같은 요청 메뉴는 요청 횟수가 증가합니다.
 - Supabase Dashboard의 Authentication 설정에서 Anonymous sign-ins를 켜야 합니다.
 - 추천은 SQL 함수가 아니라 TypeScript 도메인 로직으로 구현했습니다. 발표 시 규칙 설명과 코드 확인이 쉽고, 나중에 ML 모델로 교체하기 편합니다.
 
