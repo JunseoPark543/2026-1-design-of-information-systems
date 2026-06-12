@@ -1,10 +1,10 @@
 # 소비자 취향 분석 기반 매출 증진 시스템 MVP
 
-음식점 운영자가 소비자의 주문, 리뷰, 요청 메뉴 데이터를 분석해 소비자에게 맞춤형 메뉴를 추천하고, 관리자에게 메뉴 개선 및 매출 전략 인사이트를 제공하는 학기 프로젝트용 MVP 웹서비스입니다.
+음식점 운영자가 소비자의 주문, 리뷰, 요청 메뉴 데이터를 분석해 소비자에게 맞춤형 메뉴를 추천하고, 관리자에게 메뉴 개선 및 매출 전략 인사이트를 제공하는 26-1 정보시스템 설계 프로젝트용 웹서비스입니다.
 
 ## 주요 기능
 
-- Supabase Auth 익명 세션 기반 소비자 시작
+- Supabase Auth 익명 세션 기반 소비자 정보 등록
 - 프로필 저장: 이름, 전화번호, 성별, 나이
 - 메뉴 조회, 카테고리 필터, 평균 별점 표시
 - 장바구니 주문 및 주문 상세 저장
@@ -90,6 +90,7 @@ npm.cmd run dev
 ```env
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+NEXT_PUBLIC_ADMIN_ACCESS_CODE=admin2026
 ```
 
 Supabase 프로젝트의 Project Settings > API에서 URL과 anon key를 확인할 수 있습니다.
@@ -114,7 +115,7 @@ supabase db seed
 
 1. GitHub에 이 프로젝트를 push합니다.
 2. Vercel에서 New Project로 import합니다.
-3. Environment Variables에 `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`를 등록합니다.
+3. Environment Variables에 `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_ADMIN_ACCESS_CODE`를 등록합니다.
 4. Build command는 `npm run build`, Output은 Next.js 기본값을 사용합니다.
 5. Supabase Authentication 설정에서 Vercel 배포 URL을 Site URL 또는 Redirect URL에 추가합니다.
 
@@ -139,10 +140,10 @@ supabase db seed
 
 ## MVP 기준 결정 사항
 
-- 관리자 대시보드 `/admin`은 발표용 데모 접근을 허용했습니다. 실제 운영에서는 `profiles.role` 또는 별도 `admins` 테이블을 추가해 RLS와 화면 접근을 제한하면 됩니다.
-- 관리자 메뉴 CRUD는 MVP 편의상 데모 관리자 익명 세션을 자동 생성해 조작할 수 있게 했습니다. 운영 버전에서는 admin role 정책으로 좁혀야 합니다.
+- 관리자 대시보드 `/admin`과 `/admin/menus`는 접근 코드 입력 후 볼 수 있습니다. 기본 코드는 `admin2026`이며 `NEXT_PUBLIC_ADMIN_ACCESS_CODE`로 변경할 수 있습니다.
+- 관리자 메뉴 CRUD는 접근 코드 확인 후 필요한 Supabase 세션을 생성해 조작합니다. 운영 버전에서는 server-side admin 권한과 RLS 정책으로 좁혀야 합니다.
 - 장바구니는 빠른 시연을 위해 `localStorage`에 저장했습니다. 주문 시 Supabase의 `orders`, `order_items`에 영구 저장됩니다.
-- 소비자 시작 화면은 계정 식별 정보를 받지 않고 Supabase Auth 익명 세션을 생성한 뒤 프로필만 저장합니다.
+- 소비자 정보 등록 화면은 계정 식별 정보를 받지 않고 Supabase Auth 익명 세션을 생성한 뒤 프로필만 저장합니다. 기존 세션이 있으면 새 사용자를 만들지 않고 같은 프로필을 갱신합니다.
 - 리뷰 작성은 주문 내역 페이지에서 주문한 메뉴별로 가능하고, 별점은 메뉴 평균 평점에 반영됩니다.
 - 메뉴 요청은 소비자 세션이 있는 상태에서 가능하며, 같은 요청 메뉴는 요청 횟수가 증가합니다.
 - Supabase Dashboard의 Authentication 설정에서 Anonymous sign-ins를 켜야 합니다.
@@ -150,7 +151,7 @@ supabase db seed
 
 ## 시연 시나리오
 
-1. `/signup`에서 소비자 프로필 생성
+1. `/signup`에서 소비자 정보 등록 또는 기존 정보 수정
 2. `/menus`에서 카테고리별 메뉴 조회
 3. 메뉴를 장바구니에 담고 `/cart`에서 주문
 4. `/orders`에서 주문 내역 확인 후 리뷰 작성

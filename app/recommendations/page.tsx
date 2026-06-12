@@ -19,7 +19,7 @@ export default function RecommendationsPage() {
       const menus = await fetchActiveMenus();
       if (!userId) {
         setRecommendations(getRecommendations({ menus, orders: [], reviews: [], requests: [] }));
-        setMessage("로그인하면 주문 이력과 요청 메뉴를 반영한 개인화 추천을 볼 수 있습니다.");
+        setMessage("소비자 정보를 등록하면 주문 이력과 요청 메뉴를 반영한 개인화 추천을 볼 수 있습니다.");
         return;
       }
       const [orders, reviews, requests] = await Promise.all([fetchMyOrders(userId), fetchMyReviews(userId), fetchMyRequests(userId)]);

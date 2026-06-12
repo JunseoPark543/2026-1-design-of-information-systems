@@ -42,7 +42,7 @@ export default function CartPage() {
     const { data: auth } = await supabase.auth.getUser();
     if (!auth.user) {
       setLoading(false);
-      router.push("/login");
+      router.push("/signup");
       return;
     }
     const { data: order, error: orderError } = await supabase.from("orders").insert({ user_id: auth.user.id, total_amount: total }).select("id").single();

@@ -17,7 +17,7 @@ export default function OrdersPage() {
     getCurrentUserId()
       .then((userId) => {
         if (!userId) {
-          setMessage("로그인 후 주문 내역을 확인할 수 있습니다.");
+          setMessage("소비자 정보 등록 후 주문 내역을 확인할 수 있습니다.");
           return [];
         }
         return fetchMyOrders(userId);

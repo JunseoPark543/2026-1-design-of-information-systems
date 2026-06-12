@@ -62,10 +62,7 @@ export function Navbar() {
               </button>
             </>
           ) : (
-            <>
-              <Link href="/login" className="rounded-md px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100">데모 시작</Link>
-              <Link href="/signup" className="rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700">소비자 시작</Link>
-            </>
+            <Link href="/signup" className="rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700">소비자 시작</Link>
           )}
         </div>
         <button onClick={() => setOpen((value) => !value)} className="flex h-10 w-10 items-center justify-center rounded-md text-slate-700 hover:bg-slate-100 md:hidden" aria-label="메뉴 열기">
@@ -81,7 +78,7 @@ export function Navbar() {
             {userLabel ? (
               <button onClick={handleLogout} className="rounded-md px-3 py-2 text-left text-sm font-semibold text-slate-700 hover:bg-slate-100">로그아웃</button>
             ) : (
-              <Link href="/login" onClick={() => setOpen(false)} className="rounded-md px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100">데모 시작</Link>
+              <Link href="/signup" onClick={() => setOpen(false)} className="rounded-md px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100">소비자 시작</Link>
             )}
           </div>
         </div>

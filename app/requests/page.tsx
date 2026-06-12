@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/Button";
 import { EmptyState } from "@/components/Card";
 import { PageHeader, PageShell } from "@/components/PageShell";
@@ -9,6 +10,7 @@ import { fetchMyRequests, getCurrentUserId } from "@/lib/supabase-queries";
 import type { MenuRequest } from "@/lib/types";
 
 export default function RequestsPage() {
+  const router = useRouter();
   const [requestedName, setRequestedName] = useState("");
   const [requests, setRequests] = useState<MenuRequest[]>([]);
   const [message, setMessage] = useState("");
@@ -24,56 +26,26 @@ export default function RequestsPage() {
     loadRequests().catch((error) => setMessage(error.message));
   }, []);
 
-  async function getOrCreateConsumerId() {
-    const supabase = createClient();
-    const { data: auth } = await supabase.auth.getUser();
-
-    if (auth.user) return { supabase, userId: auth.user.id, ok: true as const };
-
-    const { data, error } = await supabase.auth.signInAnonymously({
-      options: { data: { name: "데모 사용자", gender: "선택 안 함" } },
-    });
-
-    if (error || !data.user) {
-      return {
-        supabase,
-        userId: null,
-        ok: false as const,
-        message: "메뉴 요청을 위해 Supabase Auth의 Anonymous sign-ins 설정을 켜주세요.",
-      };
-    }
-
-    const { error: profileError } = await supabase.from("profiles").upsert({
-      id: data.user.id,
-      name: "데모 사용자",
-      gender: "선택 안 함",
-    });
-
-    if (profileError) {
-      return { supabase, userId: null, ok: false as const, message: profileError.message };
-    }
-
-    return { supabase, userId: data.user.id, ok: true as const };
-  }
-
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setLoading(true);
     setMessage("");
 
     const normalizedName = requestedName.trim();
-    const client = await getOrCreateConsumerId();
+    const supabase = createClient();
+    const { data: auth } = await supabase.auth.getUser();
 
-    if (!client.ok || !client.userId) {
+    if (!auth.user) {
       setLoading(false);
-      setMessage(client.message ?? "메뉴 요청을 저장할 수 없습니다.");
+      setMessage("소비자 정보를 먼저 등록하면 메뉴 요청을 저장할 수 있습니다.");
+      router.push("/signup");
       return;
     }
 
-    const { data: existing, error: findError } = await client.supabase
+    const { data: existing, error: findError } = await supabase
       .from("menu_requests")
       .select("id, request_count")
-      .eq("user_id", client.userId)
+      .eq("user_id", auth.user.id)
       .ilike("requested_name", normalizedName)
       .maybeSingle();
 
@@ -84,8 +56,8 @@ export default function RequestsPage() {
     }
 
     const mutation = existing
-      ? client.supabase.from("menu_requests").update({ request_count: existing.request_count + 1 }).eq("id", existing.id)
-      : client.supabase.from("menu_requests").insert({ user_id: client.userId, requested_name: normalizedName, request_count: 1 });
+      ? supabase.from("menu_requests").update({ request_count: existing.request_count + 1 }).eq("id", existing.id)
+      : supabase.from("menu_requests").insert({ user_id: auth.user.id, requested_name: normalizedName, request_count: 1 });
 
     const { error } = await mutation;
     setLoading(false);

@@ -3,6 +3,7 @@
 import { BarChart3, ReceiptText, ShoppingBag, Star } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { AdminChart } from "@/components/AdminChart";
+import { AdminGate } from "@/components/AdminGate";
 import { LinkButton } from "@/components/Button";
 import { EmptyState } from "@/components/Card";
 import { InsightCard } from "@/components/InsightCard";
@@ -13,7 +14,7 @@ import { compactNumber, formatCurrency } from "@/lib/format";
 import { fetchAdminMenuMetrics, fetchAllMenuRequests } from "@/lib/supabase-queries";
 import type { AdminInsight, AdminMenuMetric, MenuRequest } from "@/lib/types";
 
-export default function AdminPage() {
+function AdminDashboard() {
   const [metrics, setMetrics] = useState<AdminMenuMetric[]>([]);
   const [requests, setRequests] = useState<MenuRequest[]>([]);
   const [message, setMessage] = useState("");
@@ -21,7 +22,10 @@ export default function AdminPage() {
 
   useEffect(() => {
     Promise.all([fetchAdminMenuMetrics(), fetchAllMenuRequests()])
-      .then(([metricRows, requestRows]) => { setMetrics(metricRows); setRequests(requestRows); })
+      .then(([metricRows, requestRows]) => {
+        setMetrics(metricRows);
+        setRequests(requestRows);
+      })
       .catch((error) => setMessage(error.message))
       .finally(() => setLoading(false));
   }, []);
@@ -40,8 +44,8 @@ export default function AdminPage() {
   const promotionMenus = insights.filter((insight) => insight.type === "promote");
 
   return (
-    <PageShell>
-      <PageHeader title="관리자 대시보드" description="MVP에서는 데모 관리자 접근을 허용합니다. 실제 서비스에서는 profiles.role 또는 별도 admin 테이블로 권한 체크를 추가하면 됩니다." action={<LinkButton href="/admin/menus" variant="secondary">메뉴 관리</LinkButton>} />
+    <>
+      <PageHeader title="관리자 대시보드" description="매출, 인기 메뉴, 요청 메뉴, 개선 인사이트를 확인합니다." action={<LinkButton href="/admin/menus" variant="secondary">메뉴 관리</LinkButton>} />
       {message ? <p className="mb-5 rounded-md bg-rose-50 p-3 text-sm font-semibold text-rose-700">{message}</p> : null}
       {loading ? <EmptyState title="대시보드를 불러오는 중" description="매출, 리뷰, 요청 메뉴 데이터를 집계하고 있습니다." /> : null}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -61,8 +65,14 @@ export default function AdminPage() {
           <div className="mt-4 grid gap-3">
             {topMenus.map((menu, index) => (
               <div key={menu.menu_id} className="flex items-center justify-between rounded-md bg-slate-50 p-3">
-                <div><p className="text-sm font-bold text-blue-700">#{index + 1}</p><p className="font-semibold text-slate-950">{menu.name}</p></div>
-                <div className="text-right text-sm text-slate-600"><p className="font-bold text-slate-950">{menu.sold_count}개</p><p>{formatCurrency(menu.revenue)}</p></div>
+                <div>
+                  <p className="text-sm font-bold text-blue-700">#{index + 1}</p>
+                  <p className="font-semibold text-slate-950">{menu.name}</p>
+                </div>
+                <div className="text-right text-sm text-slate-600">
+                  <p className="font-bold text-slate-950">{menu.sold_count}개</p>
+                  <p>{formatCurrency(menu.revenue)}</p>
+                </div>
               </div>
             ))}
           </div>
@@ -80,7 +90,12 @@ export default function AdminPage() {
         <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
           <h2 className="text-lg font-bold text-slate-950">요청 메뉴 분석</h2>
           <div className="mt-4 grid gap-3">
-            {requests.slice(0, 8).map((request) => <div key={request.id} className="flex items-center justify-between rounded-md bg-slate-50 p-3"><span className="font-semibold text-slate-950">{request.requested_name}</span><span className="rounded-md bg-blue-100 px-2 py-1 text-sm font-bold text-blue-700">{request.request_count}회</span></div>)}
+            {requests.slice(0, 8).map((request) => (
+              <div key={request.id} className="flex items-center justify-between rounded-md bg-slate-50 p-3">
+                <span className="font-semibold text-slate-950">{request.requested_name}</span>
+                <span className="rounded-md bg-blue-100 px-2 py-1 text-sm font-bold text-blue-700">{request.request_count}회</span>
+              </div>
+            ))}
           </div>
         </section>
       </div>
@@ -95,6 +110,16 @@ export default function AdminPage() {
           <div className="mt-4 grid gap-2 text-sm text-slate-600">{promotionMenus.map((item, index) => <p key={index}>{item.content}</p>)}{promotionMenus.length === 0 ? <p>현재 기준에서 홍보 강화 후보가 없습니다.</p> : null}</div>
         </section>
       </div>
+    </>
+  );
+}
+
+export default function AdminPage() {
+  return (
+    <PageShell>
+      <AdminGate>
+        <AdminDashboard />
+      </AdminGate>
     </PageShell>
   );
 }

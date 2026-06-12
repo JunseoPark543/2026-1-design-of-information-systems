@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
+import { AdminGate } from "@/components/AdminGate";
 import { Button } from "@/components/Button";
 import { EmptyState } from "@/components/Card";
 import { PageHeader, PageShell } from "@/components/PageShell";
@@ -12,7 +13,7 @@ import type { Menu } from "@/lib/types";
 type FormState = { id?: number; name: string; category: string; price: string; description: string; is_active: boolean };
 const initialForm: FormState = { name: "", category: "", price: "", description: "", is_active: true };
 
-export default function AdminMenusPage() {
+function AdminMenusContent() {
   const [menus, setMenus] = useState<Menu[]>([]);
   const [form, setForm] = useState<FormState>(initialForm);
   const [message, setMessage] = useState("");
@@ -49,7 +50,7 @@ export default function AdminMenusPage() {
     if (auth.user) return { supabase, ok: true as const };
 
     const { data, error } = await supabase.auth.signInAnonymously({
-      options: { data: { name: "데모 관리자", gender: "선택 안 함" } },
+      options: { data: { name: "관리자", role: "admin", gender: "선택 안 함" } },
     });
 
     if (error || !data.user) {
@@ -62,7 +63,7 @@ export default function AdminMenusPage() {
 
     const { error: profileError } = await supabase.from("profiles").upsert({
       id: data.user.id,
-      name: "데모 관리자",
+      name: "관리자",
       gender: "선택 안 함",
     });
 
@@ -131,8 +132,8 @@ export default function AdminMenusPage() {
   }
 
   return (
-    <PageShell>
-      <PageHeader title="관리자 메뉴 관리" description="메뉴 추가, 수정, 삭제, 활성 상태 변경을 할 수 있습니다. MVP에서는 데모 관리자 세션을 자동으로 시작합니다." />
+    <>
+      <PageHeader title="관리자 메뉴 관리" description="메뉴 추가, 수정, 삭제, 활성 상태 변경을 할 수 있습니다." />
       <form onSubmit={handleSubmit} className="mb-6 grid gap-4 rounded-lg border border-slate-200 bg-white p-5 shadow-sm lg:grid-cols-[1fr_1fr_140px]">
         <label className="grid gap-2 text-sm font-semibold text-slate-700">
           메뉴명
@@ -181,6 +182,16 @@ export default function AdminMenusPage() {
           </div>
         ))}
       </div>
+    </>
+  );
+}
+
+export default function AdminMenusPage() {
+  return (
+    <PageShell>
+      <AdminGate>
+        <AdminMenusContent />
+      </AdminGate>
     </PageShell>
   );
 }

@@ -24,7 +24,7 @@ function ReviewForm() {
     const supabase = createClient();
     const { data: auth } = await supabase.auth.getUser();
     if (!auth.user) {
-      router.push("/login");
+      router.push("/signup");
       return;
     }
     const { error } = await supabase.from("reviews").upsert({ user_id: auth.user.id, menu_id: menuId, rating, content }, { onConflict: "user_id,menu_id" });
