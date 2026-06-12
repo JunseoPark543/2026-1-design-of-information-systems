@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/client";
+﻿import { createClient } from "@/lib/supabase/client";
 import type { AdminMenuMetric, AdminOrderSummary, AdminProfileSummary, Menu, MenuRequest, OrderWithItems, Review } from "@/lib/types";
 
 export async function getCurrentUserId() {
@@ -6,6 +6,21 @@ export async function getCurrentUserId() {
   const { data, error } = await supabase.auth.getUser();
   if (error || !data.user) return null;
   return data.user.id;
+}
+
+export async function getCurrentProfileId() {
+  const supabase = createClient();
+  const { data, error } = await supabase.auth.getUser();
+  if (error || !data.user) return null;
+
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("id", data.user.id)
+    .maybeSingle();
+
+  if (profileError || !profile) return null;
+  return profile.id as string;
 }
 
 export async function fetchMenus(): Promise<Menu[]> {
@@ -81,6 +96,7 @@ export async function fetchAdminProfiles(): Promise<AdminProfileSummary[]> {
   if (error) throw error;
   return (data ?? []) as AdminProfileSummary[];
 }
+
 export async function fetchAdminOrders(): Promise<AdminOrderSummary[]> {
   const supabase = createClient();
   const { data, error } = await supabase

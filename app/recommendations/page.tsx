@@ -1,11 +1,11 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { EmptyState } from "@/components/Card";
 import { PageHeader, PageShell } from "@/components/PageShell";
 import { RecommendationCard } from "@/components/RecommendationCard";
 import { getRecommendations } from "@/lib/recommendation";
-import { fetchActiveMenus, fetchMyOrders, fetchMyRequests, fetchMyReviews, getCurrentUserId } from "@/lib/supabase-queries";
+import { fetchActiveMenus, fetchMyOrders, fetchMyRequests, fetchMyReviews, getCurrentProfileId } from "@/lib/supabase-queries";
 import type { Recommendation } from "@/lib/types";
 
 export default function RecommendationsPage() {
@@ -15,14 +15,14 @@ export default function RecommendationsPage() {
 
   useEffect(() => {
     async function load() {
-      const userId = await getCurrentUserId();
+      const profileId = await getCurrentProfileId();
       const menus = await fetchActiveMenus();
-      if (!userId) {
+      if (!profileId) {
         setRecommendations(getRecommendations({ menus, orders: [], reviews: [], requests: [] }));
         setMessage("소비자 정보를 등록하면 주문 이력과 요청 메뉴를 반영한 개인화 추천을 볼 수 있습니다.");
         return;
       }
-      const [orders, reviews, requests] = await Promise.all([fetchMyOrders(userId), fetchMyReviews(userId), fetchMyRequests(userId)]);
+      const [orders, reviews, requests] = await Promise.all([fetchMyOrders(profileId), fetchMyReviews(profileId), fetchMyRequests(profileId)]);
       setRecommendations(getRecommendations({ menus, orders, reviews, requests }));
     }
     load().catch((error) => setMessage(error.message)).finally(() => setLoading(false));
@@ -40,3 +40,4 @@ export default function RecommendationsPage() {
     </PageShell>
   );
 }
+

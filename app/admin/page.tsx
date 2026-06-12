@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { BarChart3, ReceiptText, ShoppingBag, Star } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -15,9 +15,13 @@ import { fetchAdminMenuMetrics, fetchAdminOrders, fetchAdminProfiles, fetchAllMe
 import type { AdminInsight, AdminMenuMetric, AdminOrderSummary, AdminProfileSummary, MenuRequest } from "@/lib/types";
 
 function missingViewMessage(viewName: string) {
-  return `${viewName} 뷰가 아직 Supabase에 없습니다. SQL Editor에서 002_admin_profile_summary.sql과 003_admin_order_summary.sql을 실행해주세요.`;
+  return `${viewName} 뷰가 아직 Supabase에 없습니다. SQL Editor에서 002_admin_profile_summary.sql, 003_admin_order_summary.sql, 004_profile_signup_and_admin_filter.sql을 실행해주세요.`;
 }
 
+function formatSignupDate(profile: AdminProfileSummary) {
+  if (!profile.signup_year || !profile.signup_month || !profile.signup_day) return "-";
+  return `${profile.signup_year}.${String(profile.signup_month).padStart(2, "0")}.${String(profile.signup_day).padStart(2, "0")}`;
+}
 function AdminDashboard() {
   const [metrics, setMetrics] = useState<AdminMenuMetric[]>([]);
   const [requests, setRequests] = useState<MenuRequest[]>([]);
@@ -117,13 +121,14 @@ function AdminDashboard() {
           <span className="text-sm font-semibold text-blue-700">총 {profiles.length}명</span>
         </div>
         <div className="mt-4 overflow-x-auto">
-          <table className="w-full min-w-[860px] text-left text-sm">
+          <table className="w-full min-w-[980px] text-left text-sm">
             <thead className="border-b border-slate-200 bg-slate-50 text-slate-600">
               <tr>
                 <th className="px-3 py-3 font-bold">이름</th>
                 <th className="px-3 py-3 font-bold">전화번호</th>
                 <th className="px-3 py-3 font-bold">성별</th>
                 <th className="px-3 py-3 font-bold">나이</th>
+                <th className="px-3 py-3 font-bold">가입일</th>
                 <th className="px-3 py-3 font-bold">주문</th>
                 <th className="px-3 py-3 font-bold">총 구매</th>
                 <th className="px-3 py-3 font-bold">별점</th>
@@ -138,6 +143,7 @@ function AdminDashboard() {
                   <td className="px-3 py-3 text-slate-600">{profile.phone || "-"}</td>
                   <td className="px-3 py-3 text-slate-600">{profile.gender || "-"}</td>
                   <td className="px-3 py-3 text-slate-600">{profile.age ?? "-"}</td>
+                  <td className="px-3 py-3 text-slate-600">{formatSignupDate(profile)}</td>
                   <td className="px-3 py-3 text-slate-600">{profile.order_count}건</td>
                   <td className="px-3 py-3 text-slate-600">{formatCurrency(profile.total_spent)}</td>
                   <td className="px-3 py-3 text-slate-600">{profile.review_count}개</td>
@@ -148,7 +154,7 @@ function AdminDashboard() {
                 </tr>
               ))}
               {profiles.length === 0 ? (
-                <tr><td className="px-3 py-6 text-center text-slate-500" colSpan={9}>등록된 회원 정보가 없습니다.</td></tr>
+                <tr><td className="px-3 py-6 text-center text-slate-500" colSpan={10}>등록된 회원 정보가 없습니다.</td></tr>
               ) : null}
             </tbody>
           </table>
@@ -218,3 +224,5 @@ export default function AdminPage() {
     </PageShell>
   );
 }
+
+

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { FormEvent, useEffect, useState } from "react";
 import { AdminGate } from "@/components/AdminGate";
@@ -65,6 +65,7 @@ function AdminMenusContent() {
       id: data.user.id,
       name: "관리자",
       gender: "선택 안 함",
+      role: "admin",
     });
 
     if (profileError) {
@@ -195,3 +196,4 @@ export default function AdminMenusPage() {
     </PageShell>
   );
 }
+

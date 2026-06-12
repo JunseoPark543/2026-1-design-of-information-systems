@@ -1,6 +1,7 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { LinkButton } from "@/components/Button";
 import { EmptyState } from "@/components/Card";
 import { MenuCard } from "@/components/MenuCard";
 import { PageHeader, PageShell } from "@/components/PageShell";
@@ -44,7 +45,7 @@ export default function MenusPage() {
 
   return (
     <PageShell>
-      <PageHeader title="메뉴 조회" description="카테고리별 메뉴와 평균 별점을 확인하고 장바구니에 담아 주문할 수 있습니다." />
+      <PageHeader title="메뉴 조회" description="카테고리별 메뉴와 평균 별점을 확인하고 장바구니에 담아 주문할 수 있습니다." action={<LinkButton href="/requests" variant="secondary">원하는 메뉴 요청</LinkButton>} />
       <div className="mb-5 flex gap-2 overflow-x-auto pb-1">
         {categories.map((item) => <button key={item} onClick={() => setCategory(item)} className={`shrink-0 rounded-md px-4 py-2 text-sm font-bold transition ${category === item ? "bg-blue-600 text-white" : "bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50"}`}>{item}</button>)}
       </div>
@@ -57,3 +58,5 @@ export default function MenusPage() {
     </PageShell>
   );
 }
+
+

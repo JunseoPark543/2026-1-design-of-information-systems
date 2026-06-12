@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { ShoppingBag } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -9,6 +9,7 @@ import { EmptyState } from "@/components/Card";
 import { PageHeader, PageShell } from "@/components/PageShell";
 import { formatCurrency } from "@/lib/format";
 import { createClient } from "@/lib/supabase/client";
+import { getCurrentProfileId } from "@/lib/supabase-queries";
 import type { CartLine } from "@/lib/types";
 
 const CART_KEY = "tasteops-cart";
@@ -38,14 +39,17 @@ export default function CartPage() {
   async function handleOrder() {
     setLoading(true);
     setMessage("");
-    const supabase = createClient();
-    const { data: auth } = await supabase.auth.getUser();
-    if (!auth.user) {
+
+    const profileId = await getCurrentProfileId();
+    if (!profileId) {
       setLoading(false);
+      setMessage("회원정보 등록 후 주문할 수 있습니다.");
       router.push("/signup");
       return;
     }
-    const { data: order, error: orderError } = await supabase.from("orders").insert({ user_id: auth.user.id, total_amount: total }).select("id").single();
+
+    const supabase = createClient();
+    const { data: order, error: orderError } = await supabase.from("orders").insert({ user_id: profileId, total_amount: total }).select("id").single();
     if (orderError || !order) {
       setLoading(false);
       setMessage(orderError?.message ?? "주문 생성에 실패했습니다.");

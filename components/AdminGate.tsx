@@ -1,11 +1,11 @@
-"use client";
+﻿"use client";
 
 import { FormEvent, ReactNode, useEffect, useState } from "react";
 import { LockKeyhole } from "lucide-react";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
 
-const ADMIN_ACCESS_KEY = "tasteops-admin-authorized";
+export const ADMIN_ACCESS_KEY = "tasteops-admin-authorized";
 const DEFAULT_ADMIN_CODE = "admin2026";
 
 function getExpectedCode() {
@@ -19,7 +19,7 @@ export function AdminGate({ children }: { children: ReactNode }) {
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    setAuthorized(window.localStorage.getItem(ADMIN_ACCESS_KEY) === "true");
+    setAuthorized(window.sessionStorage.getItem(ADMIN_ACCESS_KEY) === "true");
     setChecked(true);
   }, []);
 
@@ -30,7 +30,7 @@ export function AdminGate({ children }: { children: ReactNode }) {
       return;
     }
 
-    window.localStorage.setItem(ADMIN_ACCESS_KEY, "true");
+    window.sessionStorage.setItem(ADMIN_ACCESS_KEY, "true");
     setAuthorized(true);
     setMessage("");
   }

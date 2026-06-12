@@ -1,11 +1,12 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { LinkButton } from "@/components/Button";
 import { EmptyState } from "@/components/Card";
 import { PageHeader, PageShell } from "@/components/PageShell";
 import { formatCurrency, formatDate } from "@/lib/format";
-import { fetchMyOrders, getCurrentUserId } from "@/lib/supabase-queries";
+import { fetchMyOrders, getCurrentProfileId } from "@/lib/supabase-queries";
 import type { OrderWithItems } from "@/lib/types";
 
 export default function OrdersPage() {
@@ -14,25 +15,39 @@ export default function OrdersPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getCurrentUserId()
-      .then((userId) => {
-        if (!userId) {
-          setMessage("소비자 정보 등록 후 주문 내역을 확인할 수 있습니다.");
+    getCurrentProfileId()
+      .then((profileId) => {
+        if (!profileId) {
+          setMessage("회원정보 등록 후 주문 내역을 확인할 수 있습니다.");
           return [];
         }
-        return fetchMyOrders(userId);
+        return fetchMyOrders(profileId);
       })
       .then(setOrders)
       .catch((error) => setMessage(error.message))
       .finally(() => setLoading(false));
   }, []);
 
+  const totalAmount = useMemo(() => orders.reduce((sum, order) => sum + order.total_amount, 0), [orders]);
+
   return (
     <PageShell>
-      <PageHeader title="내 주문 내역" description="주문한 메뉴를 확인하고 리뷰를 작성할 수 있습니다." />
+      <PageHeader title="내 전체 주문 내역" description="지금까지 주문한 모든 메뉴와 결제 금액을 확인하고 별점을 작성할 수 있습니다." action={<LinkButton href="/requests" variant="secondary">원하는 메뉴 요청</LinkButton>} />
       {message ? <p className="mb-5 rounded-md bg-blue-50 p-3 text-sm font-semibold text-blue-700">{message}</p> : null}
+      {!loading && orders.length > 0 ? (
+        <div className="mb-5 grid gap-3 sm:grid-cols-2">
+          <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+            <p className="text-sm font-semibold text-slate-500">전체 주문 수</p>
+            <p className="mt-1 text-2xl font-bold text-slate-950">{orders.length}건</p>
+          </div>
+          <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+            <p className="text-sm font-semibold text-slate-500">누적 주문 금액</p>
+            <p className="mt-1 text-2xl font-bold text-slate-950">{formatCurrency(totalAmount)}</p>
+          </div>
+        </div>
+      ) : null}
       {loading ? <EmptyState title="주문 내역을 불러오는 중" description="잠시만 기다려주세요." /> : null}
-      {!loading && orders.length === 0 ? <EmptyState title="주문 내역이 없습니다" description="메뉴를 주문하면 이곳에서 확인할 수 있습니다." /> : null}
+      {!loading && orders.length === 0 ? <EmptyState title="주문 내역이 없습니다" description="메뉴를 주문하면 이곳에서 전체 주문 내역을 확인할 수 있습니다." /> : null}
       <div className="grid gap-4">
         {orders.map((order) => (
           <section key={order.id} className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
@@ -44,7 +59,7 @@ export default function OrdersPage() {
               {order.order_items.map((item) => (
                 <div key={item.id} className="flex flex-col gap-2 rounded-md bg-slate-50 p-3 sm:flex-row sm:items-center sm:justify-between">
                   <div><p className="font-semibold text-slate-950">{item.menus?.name ?? `메뉴 #${item.menu_id}`}</p><p className="text-sm text-slate-500">{formatCurrency(item.unit_price)} x {item.quantity}</p></div>
-                  <Link href={`/reviews/new?menuId=${item.menu_id}&menuName=${encodeURIComponent(item.menus?.name ?? "")}`} className="inline-flex min-h-10 items-center justify-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">리뷰 작성</Link>
+                  <Link href={`/reviews/new?menuId=${item.menu_id}&menuName=${encodeURIComponent(item.menus?.name ?? "")}`} className="inline-flex min-h-10 items-center justify-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">별점 작성</Link>
                 </div>
               ))}
             </div>

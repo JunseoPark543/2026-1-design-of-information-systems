@@ -1,9 +1,10 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { BarChart3, ClipboardPlus, Coffee, LogOut, Menu as MenuIcon, Settings, ShoppingCart, Sparkles, UserRound } from "lucide-react";
 import { useEffect, useState } from "react";
+import { ADMIN_ACCESS_KEY } from "@/components/AdminGate";
 import { createClient } from "@/lib/supabase/client";
 
 export function Navbar() {
@@ -39,6 +40,8 @@ export function Navbar() {
   async function handleLogout() {
     const supabase = createClient();
     await supabase.auth.signOut();
+    window.sessionStorage.removeItem(ADMIN_ACCESS_KEY);
+    window.localStorage.removeItem(ADMIN_ACCESS_KEY);
     setUserLabel(null);
     router.push("/");
     router.refresh();

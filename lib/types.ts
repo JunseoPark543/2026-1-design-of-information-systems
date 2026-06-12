@@ -1,4 +1,4 @@
-export type Gender = "남성" | "여성" | "기타" | "선택 안 함";
+﻿export type Gender = "남성" | "여성" | "기타" | "선택 안 함";
 
 export type Profile = {
   id: string;
@@ -6,6 +6,10 @@ export type Profile = {
   phone: string | null;
   gender: string | null;
   age: number | null;
+  role?: string | null;
+  signup_year?: number | null;
+  signup_month?: number | null;
+  signup_day?: number | null;
   created_at: string;
 };
 
@@ -92,12 +96,16 @@ export type AdminProfileSummary = {
   phone: string | null;
   gender: string | null;
   age: number | null;
+  signup_year: number | null;
+  signup_month: number | null;
+  signup_day: number | null;
   created_at: string;
   order_count: number;
   total_spent: number;
   review_count: number;
   request_count: number;
 };
+
 export type AdminOrderSummary = {
   order_id: number;
   user_id: string | null;
