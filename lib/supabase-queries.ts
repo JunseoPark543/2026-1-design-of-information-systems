@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/client";
-import type { AdminMenuMetric, AdminProfileSummary, Menu, MenuRequest, OrderWithItems, Review } from "@/lib/types";
+import type { AdminMenuMetric, AdminOrderSummary, AdminProfileSummary, Menu, MenuRequest, OrderWithItems, Review } from "@/lib/types";
 
 export async function getCurrentUserId() {
   const supabase = createClient();
@@ -80,4 +80,13 @@ export async function fetchAdminProfiles(): Promise<AdminProfileSummary[]> {
     .order("created_at", { ascending: false });
   if (error) throw error;
   return (data ?? []) as AdminProfileSummary[];
+}
+export async function fetchAdminOrders(): Promise<AdminOrderSummary[]> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("admin_order_summary")
+    .select("*")
+    .order("ordered_at", { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as AdminOrderSummary[];
 }

@@ -98,3 +98,11 @@ export type AdminProfileSummary = {
   review_count: number;
   request_count: number;
 };
+export type AdminOrderSummary = {
+  order_id: number;
+  user_id: string | null;
+  ordered_at: string;
+  total_amount: number;
+  item_count: number;
+  menu_summary: string | null;
+};

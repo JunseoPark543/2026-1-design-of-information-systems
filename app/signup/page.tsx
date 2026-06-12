@@ -120,8 +120,8 @@ export default function SignupPage() {
   return (
     <PageShell className="flex min-h-[calc(100vh-72px)] items-center justify-center">
       <Card className="w-full max-w-2xl p-6">
-        <h1 className="text-2xl font-bold text-slate-950">{hasExistingProfile ? "내 정보 수정" : "소비자 정보 등록"}</h1>
-        <p className="mt-2 text-sm text-slate-600">저장된 소비자 정보는 주문, 별점, 요청 메뉴, 추천 기능에 연결됩니다.</p>
+        <h1 className="text-2xl font-bold text-slate-950">{hasExistingProfile ? "내 정보 수정" : "회원가입"}</h1>
+        <p className="mt-2 text-sm text-slate-600">회원 정보는 주문, 별점, 메뉴 요청, 추천 기능에 연결됩니다.</p>
         <form onSubmit={handleSubmit} className="mt-6 grid gap-4 sm:grid-cols-2">
           <label className="grid gap-2 text-sm font-semibold text-slate-700">
             이름

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { BarChart3, Coffee, LogOut, Menu as MenuIcon, Settings, ShoppingCart, Sparkles, UserRound } from "lucide-react";
+import { BarChart3, ClipboardPlus, Coffee, LogOut, Menu as MenuIcon, Settings, ShoppingCart, Sparkles, UserRound } from "lucide-react";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -22,12 +22,7 @@ export function Navbar() {
       return;
     }
 
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("name")
-      .eq("id", data.user.id)
-      .maybeSingle();
-
+    const { data: profile } = await supabase.from("profiles").select("name").eq("id", data.user.id).maybeSingle();
     const metadataName = data.user.user_metadata?.name as string | undefined;
     setUserLabel(profile?.name || metadataName || "소비자");
   }
@@ -52,6 +47,7 @@ export function Navbar() {
   const consumerLinks = [
     { href: "/menus", label: "메뉴", icon: Coffee },
     { href: "/cart", label: "장바구니", icon: ShoppingCart },
+    { href: "/requests", label: "메뉴 요청", icon: ClipboardPlus },
     { href: "/recommendations", label: "추천", icon: Sparkles },
   ];
 
@@ -90,7 +86,10 @@ export function Navbar() {
               </button>
             </>
           ) : (
-            <Link href="/signup" className="rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700">소비자 시작</Link>
+            <div className="flex items-center gap-2">
+              <Link href="/login" className="rounded-md px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100">로그인</Link>
+              <Link href="/signup" className="rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700">회원가입</Link>
+            </div>
           )}
         </div>
         <button onClick={() => setOpen((value) => !value)} className="flex h-10 w-10 items-center justify-center rounded-md text-slate-700 hover:bg-slate-100 md:hidden" aria-label="메뉴 열기">
@@ -109,7 +108,10 @@ export function Navbar() {
                 <button onClick={handleLogout} className="rounded-md px-3 py-2 text-left text-sm font-semibold text-slate-700 hover:bg-slate-100">로그아웃</button>
               </>
             ) : (
-              <Link href="/signup" onClick={() => setOpen(false)} className="rounded-md px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100">소비자 시작</Link>
+              <>
+                <Link href="/login" onClick={() => setOpen(false)} className="rounded-md px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100">로그인</Link>
+                <Link href="/signup" onClick={() => setOpen(false)} className="rounded-md px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100">회원가입</Link>
+              </>
             )}
           </div>
         </div>

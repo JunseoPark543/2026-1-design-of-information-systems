@@ -101,7 +101,8 @@ Supabase SQL Editor에서 아래 순서로 실행합니다.
 
 1. `supabase/migrations/001_initial_schema.sql`
 2. `supabase/migrations/002_admin_profile_summary.sql`
-3. `supabase/seed.sql`
+3. `supabase/migrations/003_admin_order_summary.sql`
+4. `supabase/seed.sql`
 
 Supabase CLI를 사용하는 경우:
 
@@ -112,7 +113,7 @@ supabase db seed
 
 `seed.sql`에는 메뉴, 주문, 리뷰, 요청 메뉴, 인사이트 샘플 데이터가 포함되어 있어 관리자 대시보드를 바로 시연할 수 있습니다. 소비자 개인 주문/추천 흐름은 앱에서 소비자 정보 등록 후 직접 주문과 별점을 생성해 확인합니다.
 
-이미 `001_initial_schema.sql`과 `seed.sql`을 실행했다면, 회원 정보 조회 기능을 위해 `002_admin_profile_summary.sql`만 추가로 실행하면 됩니다.
+이미 `001_initial_schema.sql`과 `seed.sql`을 실행했다면, 관리자 회원/주문 조회 기능을 위해 `002_admin_profile_summary.sql`과 `003_admin_order_summary.sql`만 추가로 실행하면 됩니다. `Could not find the table public.admin_profile_summary in the schema cache` 오류도 이 migration을 실행하면 해결됩니다.
 
 ## Vercel 배포 방법
 
@@ -160,5 +161,5 @@ supabase db seed
 4. `/orders`에서 주문 내역 확인 후 별점 작성
 5. `/requests`에서 원하는 메뉴 요청
 6. `/recommendations`에서 추천 메뉴와 추천 이유 확인
-7. `/admin`에서 매출, 인기 메뉴, 회원 정보, 요청 메뉴, 개선 인사이트 확인
+7. `/admin`에서 매출, 인기 메뉴, 회원 정보, 회원별 주문 내역, 요청 메뉴, 개선 인사이트 확인
 8. `/admin/menus`에서 메뉴 추가/수정/비활성 처리 시연
